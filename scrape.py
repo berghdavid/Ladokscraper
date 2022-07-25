@@ -13,7 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 TIMEOUT_MAX = 5
-COURSES_URL = "https://www.student.ladok.se/student/app/studentwebb/min-utbildning/avklarade"
+COURSES_URL = "https://www.student.ladok.se/student/app/studentwebb/min-utbildning/alla"
 
 def wait_find_element(driver, identifier, name, timeout = TIMEOUT_MAX):
     """
@@ -54,11 +54,12 @@ def find_course_status(driver):
     badges = [
         'badge-light',
         'badge-success',
-        'badge-primary'
+        'badge-primary',
+        'badge-danger'
     ]
     for badge in badges:
         try:
-            return driver.find_element(By.CLASS_NAME, badge)
+            return driver.find_element(By.CLASS_NAME, badge).text
         except NoSuchElementException:
             continue
     return 'credited'
@@ -91,10 +92,10 @@ def retrieve_course_links(driver):
     """
     elements = wait_find_elements(driver, By.CLASS_NAME, "ladok-accordian")
     course_links = []
-    first_list = elements[0]
-    for course in first_list.find_elements(By.CLASS_NAME, "ladok-list-kort"):
-        course_link = course.find_element(By.CLASS_NAME, "card-link").get_attribute("href")
-        course_links.append(course_link)
+    for course_list in elements:
+        for course in course_list.find_elements(By.CLASS_NAME, "ladok-list-kort"):
+            course_link = course.find_element(By.CLASS_NAME, "card-link").get_attribute("href")
+            course_links.append(course_link)
     return course_links
 
 def retrieve_grades(driver, course_links):
@@ -105,14 +106,13 @@ def retrieve_grades(driver, course_links):
     for link in course_links:
         driver.get(link)
         course_name_element = wait_find_element(driver, By.TAG_NAME, "h1")
-        status_element = find_course_status(driver)
+        status = find_course_status(driver)
         grade_element = wait_find_element(
             driver, By.CLASS_NAME, "ladok-list-kort-header-rubrik", 0
         )
 
-        if course_name_element and status_element and grade_element:
+        if course_name_element and status and grade_element:
             course_name = course_name_element.text
-            status = status_element.text
             grade = grade_element.text[-2]
             # --- Example grade ---
             # Final grade: Pass with credit (4)
