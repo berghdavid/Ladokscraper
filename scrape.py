@@ -29,7 +29,6 @@ def wait_find_element(driver, identifier, name, timeout = TIMEOUT_MAX):
             EC.visibility_of_element_located((identifier, name))
         )
     except TimeoutException:
-        print("Error: Could not find " + str(identifier) + ": " + str(name))
         return None
 
 def wait_find_elements(driver, identifier, name, timeout = TIMEOUT_MAX):
@@ -46,7 +45,6 @@ def wait_find_elements(driver, identifier, name, timeout = TIMEOUT_MAX):
             EC.presence_of_all_elements_located((identifier, name))
         )
     except TimeoutException:
-        print("Error: Could not find " + str(identifier) + ": " + str(name))
         return None
 
 def find_course_status(driver):
@@ -85,53 +83,62 @@ def login(driver, login_info):
     driver.get(COURSES_URL)
     return driver
 
-def retrieve_course_links(driver):
+def get_programme_course_links(driver):
     """
-    Retrieve links to all the different courses from ladok, assuming that the driver is currently
-    located at the 'courses' webpage.
+    Retrieve links to all the different courses from the different programmes located at Ladok.
+    Assumes that the driver is currently located at the 'courses' webpage.
     """
-    elements = wait_find_elements(driver, By.CLASS_NAME, "ladok-accordian")
-    course_links = []
-    for course_list in elements:
-        for course in course_list.find_elements(By.CLASS_NAME, "ladok-list-kort"):
-            course_link = course.find_element(By.CLASS_NAME, "card-link").get_attribute("href")
-            course_links.append(course_link)
-    return course_links
+    all_programmes = {}
+    programme_containers = wait_find_elements(driver, By.TAG_NAME, "ladok-paketering")
+    for programme in programme_containers:
+        programme_name = programme.find_element(By.TAG_NAME, "h2").text
+        programme_course_lists = programme.find_elements(By.CLASS_NAME, "ladok-accordian")
+        course_links = []
+        for course_list in programme_course_lists:
+            for course in course_list.find_elements(By.CLASS_NAME, "ladok-list-kort"):
+                course_link = course.find_element(By.CLASS_NAME, "card-link").get_attribute("href")
+                course_links.append(course_link)
+        all_programmes[programme_name] = course_links
+    return all_programmes
 
-def retrieve_grades(driver, course_links):
-    """
-    Retrieve grades from all the given course links.
-    """
-    courses = []
-    for link in course_links:
-        driver.get(link)
-        course_name_element = wait_find_element(driver, By.TAG_NAME, "h1")
-        status = find_course_status(driver)
-        grade_element = wait_find_element(
-            driver, By.CLASS_NAME, "ladok-list-kort-header-rubrik", 0
-        )
+def retrieve_grades(driver, all_programmes):
+    """ Retrieve grades from all the given course links. """
+    all_results = {}
+    header_class = "ladok-list-kort-header-rubrik"
+    for programme_name, course_links in all_programmes.items():
+        programme_results = []
+        for link in course_links:
+            driver.get(link)
+            course_name_element = wait_find_element(driver, By.TAG_NAME, "h1")
+            status = find_course_status(driver)
+            grade_element = wait_find_element(driver, By.CLASS_NAME, header_class, 0)
 
-        if course_name_element and status and grade_element:
-            course_name = course_name_element.text
-            grade = grade_element.text[-2]
-            # --- Example grade ---
-            # Final grade: Pass with credit (4)
+            if course_name_element and status:
+                course_name = course_name_element.text
+                if status == 'Completed':
+                    # Example: 'Final grade: Pass with credit (4)'
+                    grade = grade_element.text[-2]
+                elif status == 'credited':
+                    grade = 'credited'
+                else:
+                    grade = 'U'
 
-            print("Adding " + course_name)
-            courses.append({
-                'name': course_name,
-                'status': status,
-                'grade': grade
-            })
-    return courses
+                print("Adding " + course_name)
+                programme_results.append({
+                    'name': course_name,
+                    'status': status,
+                    'grade': grade
+                })
+        all_results[programme_name] = programme_results
+    return all_results
 
 def main():
     """ Main method """
     login_info = get_login_info()
     driver = webdriver.Chrome()
     login(driver, login_info)
-    course_links = retrieve_course_links(driver)
-    grades = retrieve_grades(driver, course_links)
+    all_programmes = get_programme_course_links(driver)
+    grades = retrieve_grades(driver, all_programmes)
     print(grades)
     driver.close()
 
