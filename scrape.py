@@ -6,9 +6,11 @@ berghdavid@hotmail.com
 """
 
 from getpass import getpass
+import json
 from alive_progress import alive_bar
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -72,6 +74,12 @@ def get_login_info():
         'password': password
     }
 
+def init_webdriver():
+    """ Initialize a clean new webdriver =) """
+    options = Options()
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    return webdriver.Chrome(options=options)
+
 def login(driver, login_info):
     """ Request username and password, which is then used to login to Ladok web services. """
     driver.get(COURSES_URL)
@@ -106,6 +114,8 @@ def retrieve_grades(driver, all_programmes):
     """ Retrieve grades from all the given course links. """
     all_results = {}
     header_class = "ladok-list-kort-header-rubrik"
+    size = len(all_programmes)
+    print(f"Collecting grades from {size} programmes...")
     for programme_name, course_links in all_programmes.items():
         programme_results = []
         with alive_bar(len(course_links), title=programme_name) as loading_bar:
@@ -117,7 +127,11 @@ def retrieve_grades(driver, all_programmes):
 
                 if course_name_element and status:
                     course_name = course_name_element.text
-                    if status == 'Completed':
+                    if status == 'Completed' and grade_element:
+                        if not grade:
+                            print("Missing grade for: " + str(course_name) +
+                                ", please edit to the correct grade inside 'grade.txt'")
+                            continue
                         # Example: 'Final grade: Pass with credit (4)'
                         grade = grade_element.text[-2]
                     elif status == 'credited':
@@ -135,15 +149,24 @@ def retrieve_grades(driver, all_programmes):
         all_results[programme_name] = programme_results
     return all_results
 
+def write_result_to_file(grades):
+    """ Write grades to file in json format. """
+    file_name = "grades.json"
+    print(f"Writing grades to {file_name}...")
+    with open(file_name, "w", encoding='UTF-8') as file:
+        file.write(json.dumps(grades, indent=4))
+        file.close()
+
 def main():
     """ Main method """
     login_info = get_login_info()
-    driver = webdriver.Chrome()
+    driver = init_webdriver()
     login(driver, login_info)
     all_programmes = get_programme_course_links(driver)
     grades = retrieve_grades(driver, all_programmes)
-    print(grades)
+    write_result_to_file(grades)
     driver.close()
+    print("Done")
 
 if __name__ == '__main__':
     main()
