@@ -6,6 +6,7 @@ berghdavid@hotmail.com
 """
 
 from getpass import getpass
+from alive_progress import alive_bar
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
@@ -107,28 +108,30 @@ def retrieve_grades(driver, all_programmes):
     header_class = "ladok-list-kort-header-rubrik"
     for programme_name, course_links in all_programmes.items():
         programme_results = []
-        for link in course_links:
-            driver.get(link)
-            course_name_element = wait_find_element(driver, By.TAG_NAME, "h1")
-            status = find_course_status(driver)
-            grade_element = wait_find_element(driver, By.CLASS_NAME, header_class, 0)
+        with alive_bar(len(course_links), title=programme_name) as loading_bar:
+            for link in course_links:
+                driver.get(link)
+                course_name_element = wait_find_element(driver, By.TAG_NAME, "h1")
+                status = find_course_status(driver)
+                grade_element = wait_find_element(driver, By.CLASS_NAME, header_class, 0)
 
-            if course_name_element and status:
-                course_name = course_name_element.text
-                if status == 'Completed':
-                    # Example: 'Final grade: Pass with credit (4)'
-                    grade = grade_element.text[-2]
-                elif status == 'credited':
-                    grade = 'credited'
-                else:
-                    grade = 'U'
+                if course_name_element and status:
+                    course_name = course_name_element.text
+                    if status == 'Completed':
+                        # Example: 'Final grade: Pass with credit (4)'
+                        grade = grade_element.text[-2]
+                    elif status == 'credited':
+                        grade = 'credited'
+                    else:
+                        grade = 'U'
 
-                print("Adding " + course_name)
-                programme_results.append({
-                    'name': course_name,
-                    'status': status,
-                    'grade': grade
-                })
+                    programme_results.append({
+                        'name': course_name,
+                        'status': status,
+                        'grade': grade
+                    })
+                    # pylint: disable=not-callable
+                    loading_bar()
         all_results[programme_name] = programme_results
     return all_results
 
