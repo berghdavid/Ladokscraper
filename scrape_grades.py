@@ -6,64 +6,11 @@ berghdavid@hotmail.com
 """
 
 from getpass import getpass
-import json
 from alive_progress import alive_bar
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
-from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
-TIMEOUT_MAX = 5
-COURSES_URL = "https://www.student.ladok.se/student/app/studentwebb/min-utbildning/alla"
-
-def wait_find_element(driver, identifier, name, timeout = TIMEOUT_MAX):
-    """
-    Wait for page to load, then retrieve an element defined by its identifier and name.
-
-    Examples
-    --------
-    >>> wait_get_element(driver, BY.id, username).text
-    "ExampleUser"
-    """
-    try:
-        return WebDriverWait(driver, timeout).until(
-            EC.visibility_of_element_located((identifier, name))
-        )
-    except TimeoutException:
-        return None
-
-def wait_find_elements(driver, identifier, name, timeout = TIMEOUT_MAX):
-    """
-    Wait for page to load, then retrieve elements defined by its identifiers and names.
-
-    Examples
-    --------
-    >>> wait_get_elements(driver, BY.id, usernames)[0].text
-    "ExampleUser"
-    """
-    try:
-        return WebDriverWait(driver, timeout).until(
-            EC.presence_of_all_elements_located((identifier, name))
-        )
-    except TimeoutException:
-        return None
-
-def find_course_status(driver):
-    """ Find the status of the course. """
-    badges = [
-        'badge-light',
-        'badge-success',
-        'badge-primary',
-        'badge-danger'
-    ]
-    for badge in badges:
-        try:
-            return driver.find_element(By.CLASS_NAME, badge).text
-        except NoSuchElementException:
-            continue
-    return 'credited'
+from utils import init_webdriver, wait_find_element, wait_find_elements, write_object_into_json_file
 
 def get_login_info():
     """ Request username and password which is used for login to Ladok. """
@@ -74,22 +21,17 @@ def get_login_info():
         'password': password
     }
 
-def init_webdriver():
-    """ Initialize a clean new webdriver =) """
-    options = Options()
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    return webdriver.Chrome(options=options)
-
 def login(driver, login_info):
     """ Request username and password, which is then used to login to Ladok web services. """
-    driver.get(COURSES_URL)
+    courses_url = "https://www.student.ladok.se/student/app/studentwebb/min-utbildning/alla"
+    driver.get(courses_url)
     wait_find_element(driver, By.CLASS_NAME, "btn-primary").click()
     wait_find_element(driver, By.ID, "searchinput").send_keys("Lund University")
     wait_find_element(driver, By.CLASS_NAME, "identityprovider").click()
     wait_find_element(driver, By.ID, "username").send_keys(login_info['username'])
     wait_find_element(driver, By.ID, "password").send_keys(login_info['password'])
     wait_find_element(driver, By.CLASS_NAME, "btn-submit").click()
-    driver.get(COURSES_URL)
+    driver.get(courses_url)
     return driver
 
 def get_programme_course_links(driver):
@@ -109,6 +51,21 @@ def get_programme_course_links(driver):
                 course_links.append(course_link)
         all_programmes[programme_name] = course_links
     return all_programmes
+
+def find_course_status(driver):
+    """ Find the status of the course. """
+    badges = [
+        'badge-light',
+        'badge-success',
+        'badge-primary',
+        'badge-danger'
+    ]
+    for badge in badges:
+        try:
+            return driver.find_element(By.CLASS_NAME, badge).text
+        except NoSuchElementException:
+            continue
+    return 'credited'
 
 def retrieve_grades(driver, all_programmes):
     """ Retrieve grades from all the given course links. """
@@ -149,14 +106,6 @@ def retrieve_grades(driver, all_programmes):
         all_results[programme_name] = programme_results
     return all_results
 
-def write_result_to_file(grades):
-    """ Write grades to file in json format. """
-    file_name = "grades.json"
-    print(f"Writing grades to {file_name}...")
-    with open(file_name, "w", encoding='UTF-8') as file:
-        file.write(json.dumps(grades, indent=4))
-        file.close()
-
 def main():
     """ Main method """
     login_info = get_login_info()
@@ -164,7 +113,7 @@ def main():
     login(driver, login_info)
     all_programmes = get_programme_course_links(driver)
     grades = retrieve_grades(driver, all_programmes)
-    write_result_to_file(grades)
+    write_object_into_json_file(grades, "grades.json")
     driver.close()
     print("Done")
 
