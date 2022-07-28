@@ -58,10 +58,19 @@ def get_data_dir_path(filename):
     rel_path = "../data/" + filename
     return os.path.join(script_dir, rel_path)
 
-def write_object_into_json_file(grades, file_name):
+def write_object_into_json_file(obj, file_name):
     """ Write any python object to a file in json format. """
     file_path = get_data_dir_path(file_name)
-    print(f"Writing to {file_name}...")
+    print(f"Writing to {file_path}")
     with open(file_path, mode="w", encoding='utf-8') as file:
-        file.write(json.dumps(grades, indent=4))
+        file.write(json.dumps(obj, indent=4))
         file.close()
+
+def read_json_file_into_object(file_name):
+    """ Read a json file and parse it into a python object. """
+    file_path = get_data_dir_path(file_name)
+    print(f"Reading from {file_path}")
+    with open(file_path, mode="r", encoding='utf-8') as file:
+        obj = json.loads(file.read())
+        file.close()
+        return obj

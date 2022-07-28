@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 
 from utils import init_webdriver, wait_find_element, wait_find_elements, write_object_into_json_file
 
-def get_login_info():
+def prompt_login_info():
     """ Request username and password which is used for login to Ladok. """
     username = input("Username: ")
     password = getpass("Password: ")
@@ -108,7 +108,7 @@ def retrieve_grades(driver, all_programmes):
 
 def main():
     """ Main method """
-    login_info = get_login_info()
+    login_info = prompt_login_info()
     driver = init_webdriver()
     login(driver, login_info)
     all_programmes = get_programme_course_links(driver)

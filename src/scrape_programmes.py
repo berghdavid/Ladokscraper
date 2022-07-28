@@ -10,7 +10,7 @@ from selenium.common.exceptions import NoSuchElementException
 
 from utils import init_webdriver, wait_find_elements, write_object_into_json_file
 
-def get_programme_info():
+def prompt_programme_info():
     """ Ask the user for what programme at LTH to lookup. """
     return input("What programme are you studying? (A, BME, V, etc.): ")
 
@@ -46,7 +46,7 @@ def get_programme_courses(driver, programme):
 
 def main():
     """ Main method """
-    programme = get_programme_info()
+    programme = prompt_programme_info()
     driver = init_webdriver()
     courses = get_programme_courses(driver, programme)
     if not courses:
