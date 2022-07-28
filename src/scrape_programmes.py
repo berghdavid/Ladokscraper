@@ -1,5 +1,5 @@
 """
-Data analyzer for grades retrieved from Ladok web services
+Web scraper for LTH programme courses
 
 David Bergh
 berghdavid@hotmail.com
