@@ -2,5 +2,8 @@
 A web-scraper built to retrieve finished courses from Ladok as well as compare them with active programmes at LTH.
 
 ## Run
-```python scrape_grades.py```
-```python scrape_programmes.py```
+Enter project directory and run the either of the commands below
+```
+python src/scrape_grades.py
+python src/scrape_programmes.py
+```

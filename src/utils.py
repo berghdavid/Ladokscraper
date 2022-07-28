@@ -6,12 +6,12 @@ berghdavid@hotmail.com
 """
 
 import json
+import os
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
 TIMEOUT_MAX = 5
 
 def init_webdriver():
@@ -52,9 +52,16 @@ def wait_find_elements(driver, identifier, name, timeout = TIMEOUT_MAX):
     except TimeoutException:
         return None
 
+def get_data_dir_path(filename):
+    """ Computes the data directory path based on current file structure. """
+    script_dir = os.path.dirname(__file__)
+    rel_path = "../data/" + filename
+    return os.path.join(script_dir, rel_path)
+
 def write_object_into_json_file(grades, file_name):
     """ Write any python object to a file in json format. """
+    file_path = get_data_dir_path(file_name)
     print(f"Writing to {file_name}...")
-    with open(file_name, mode="w", encoding='utf-8') as file:
+    with open(file_path, mode="w", encoding='utf-8') as file:
         file.write(json.dumps(grades, indent=4))
         file.close()
