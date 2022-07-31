@@ -5,6 +5,7 @@ David Bergh
 berghdavid@hotmail.com
 """
 
+from alive_progress import alive_bar
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 
@@ -45,22 +46,26 @@ def get_course_levels(table):
 
 def get_programme_courses(driver, programme):
     """ Retrieve what courses are included in the given programme. """
-    url = 'https://kurser.lth.se/lot/programme?ay=22_23&programme=' + programme
-    driver.get(url)
+    driver.get('https://kurser.lth.se/lot/programme?ay=22_23&programme=' + programme)
     all_courses = {}
     all_table_names = wait_find_elements(driver, By.TAG_NAME, "h2")
+    study_years_size = len(all_table_names)
 
+    print(f"Collecting courses from {study_years_size} study years...")
     all_tables = wait_find_elements(driver, By.TAG_NAME, "tbody")
-    for index, table in enumerate(all_tables):
-        yearly_courses = []
-        course_codes = get_course_codes(table)
-        course_levels = get_course_levels(table)
-        for course_index, course_code in enumerate(course_codes):
-            course = {}
-            course['name'] = course_code
-            course['level'] = course_levels[course_index]
-            yearly_courses.append(course)
-        all_courses[all_table_names[index].text] = yearly_courses
+    with alive_bar(study_years_size, title='Study years') as loading_bar:
+        for index, table in enumerate(all_tables):
+            yearly_courses = []
+            course_codes = get_course_codes(table)
+            course_levels = get_course_levels(table)
+            for course_index, course_code in enumerate(course_codes):
+                course = {}
+                course['name'] = course_code
+                course['level'] = course_levels[course_index]
+                yearly_courses.append(course)
+            all_courses[all_table_names[index].text] = yearly_courses
+            # pylint: disable=not-callable
+            loading_bar()
     print(all_courses)
     return all_courses
 
