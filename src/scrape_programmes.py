@@ -26,21 +26,41 @@ def verify_site_existance(driver, programme):
     except NoSuchElementException:
         return True
 
+
+def is_level(word):
+    """ Determine whether the element containes a valid course level or not. """
+    return word in ('A', 'G1', 'G2')
+
+def get_course_codes(table):
+    """ Retrieve all the course codes from a given table of courses. """
+    course_code_elements = table.find_elements(By.CLASS_NAME, 'app-course-code-col')
+    return [course_code.find_element(By.TAG_NAME, 'a').text
+            for course_code in course_code_elements]
+
+def get_course_levels(table):
+    """ Retrieve the levels for all the different courses from a given table of courses. """
+    span_data = table.find_elements(By.TAG_NAME, 'span')
+    span_str = [element.text for element in span_data]
+    return list(filter(is_level, span_str))
+
 def get_programme_courses(driver, programme):
     """ Retrieve what courses are included in the given programme. """
     url = 'https://kurser.lth.se/lot/programme?ay=22_23&programme=' + programme
     driver.get(url)
-    all_courses = []
+    all_courses = {}
     all_table_names = wait_find_elements(driver, By.TAG_NAME, "h2")
-    all_tables = wait_find_elements(driver, By.TAG_NAME, "tbody")
 
+    all_tables = wait_find_elements(driver, By.TAG_NAME, "tbody")
     for index, table in enumerate(all_tables):
-        courses = []
-        all_cells = table.find_elements(By.CLASS_NAME, 'app-course-code-col')
-        for cell in all_cells:
-            course_name = cell.find_element(By.TAG_NAME, 'a').text
-            courses.append(course_name)
-        all_courses.append({all_table_names[index].text: courses})
+        yearly_courses = []
+        course_codes = get_course_codes(table)
+        course_levels = get_course_levels(table)
+        for course_index, course_code in enumerate(course_codes):
+            course = {}
+            course['name'] = course_code
+            course['level'] = course_levels[course_index]
+            yearly_courses.append(course)
+        all_courses[all_table_names[index].text] = yearly_courses
     print(all_courses)
     return all_courses
 
