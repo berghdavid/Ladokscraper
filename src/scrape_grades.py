@@ -74,7 +74,7 @@ def retrieve_grades(driver, all_programmes):
     size = len(all_programmes)
     print(f"Collecting grades from {size} programmes...")
     for programme_name, course_links in all_programmes.items():
-        programme_results = []
+        programme_results = {}
         with alive_bar(len(course_links), title=programme_name) as loading_bar:
             for link in course_links:
                 driver.get(link)
@@ -96,11 +96,12 @@ def retrieve_grades(driver, all_programmes):
                     else:
                         grade = 'U'
 
-                    programme_results.append({
+                    code = course_name.split('-')[-1].strip()
+                    programme_results[code] = {
                         'name': course_name,
                         'status': status,
                         'grade': grade
-                    })
+                    }
                     # pylint: disable=not-callable
                     loading_bar()
         all_results[programme_name] = programme_results
