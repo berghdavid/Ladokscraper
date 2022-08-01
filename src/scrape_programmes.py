@@ -27,22 +27,35 @@ def verify_site_existance(driver, programme):
     except NoSuchElementException:
         return True
 
-
-def is_level(word):
-    """ Determine whether the element containes a valid course level or not. """
-    return word in ('A', 'G1', 'G2')
-
 def get_course_codes(table):
     """ Retrieve all the course codes from a given table of courses. """
     course_code_elements = table.find_elements(By.CLASS_NAME, 'app-course-code-col')
     return [course_code.find_element(By.TAG_NAME, 'a').text
             for course_code in course_code_elements]
 
+def is_level(word):
+    """ Determine whether the element containes a valid course level or not. """
+    return word in ('A', 'G1', 'G2')
+
 def get_course_levels(table):
     """ Retrieve the levels for all the different courses from a given table of courses. """
     span_data = table.find_elements(By.TAG_NAME, 'span')
     span_str = [element.text for element in span_data]
     return list(filter(is_level, span_str))
+
+def is_hp(word):
+    """ Determine whether the given string is in hp format """
+    return word[-2:] in ('.5', '.0')
+
+def get_course_hp(table):
+    """ Retrieve the levels for all the different courses from a given table of courses. """
+    span_data = table.find_elements(By.TAG_NAME, 'td')
+    rows_str = [element.text for element in span_data]
+    hp_str = []
+    for header in rows_str:
+        if is_hp(header):
+            hp_str.append(header)
+    return hp_str
 
 def get_programme_courses(driver, programme):
     """ Retrieve what courses are included in the given programme. """
@@ -58,9 +71,11 @@ def get_programme_courses(driver, programme):
             yearly_courses = []
             course_codes = get_course_codes(table)
             course_levels = get_course_levels(table)
+            course_hp = get_course_hp(table)
             for course_index, course_code in enumerate(course_codes):
                 course = {}
                 course['name'] = course_code
+                course['hp'] = course_hp[course_index]
                 course['level'] = course_levels[course_index]
                 yearly_courses.append(course)
             all_courses[all_table_names[index].text] = yearly_courses
