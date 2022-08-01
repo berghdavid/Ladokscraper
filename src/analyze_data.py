@@ -19,6 +19,46 @@ def parse_data(programme):
     grades_json = read_json_file_into_object(grades_file_name)
     return (programme_json, grades_json)
 
+def get_compulsories_left(programme_courses, completed_courses):
+    """ Get the compulsory courses which are not yet completed. """
+    header_compulsories = [
+        'Årskurs 1 - Obligatoriska kurser',
+        'Årskurs 2 - Obligatoriska kurser',
+        'Årskurs 3 - Obligatoriska kurser',
+    ]
+    compulsory_courses = []
+    for header in header_compulsories:
+        compulsory_courses += programme_courses[header]
+    compulsories_left = []
+    for compulsory in compulsory_courses:
+        code = compulsory['name']
+        if code not in completed_courses:
+            compulsories_left.append(compulsory)
+        elif completed_courses[code]['status'] not in ('Completed', 'credited') or \
+             completed_courses[code]['grade'] not in ('3', '4', '5', 'G', 'credited'):
+            compulsories_left.append(compulsory)
+    return compulsories_left
+
+def merge_programme_grades(grades):
+    """ Merges all the taken courses into one dictionary. """
+    courses = {}
+    for programme in grades.values():
+        courses = courses | programme
+    return courses
+
+def analyze_grades(programme_courses, grades):
+    """ Analyze and print current education status. """
+    ### Programme requirements ###
+    # 300 hp
+    # 180 hp from the first 3 years
+    # 75 hp from advanced level (includes masters thesis)
+    # 45 hp from one spec. 30 hp from A-level courses within that spec
+    # 45 hp from within program
+    # 15 hp from wherever
+    completed_courses = merge_programme_grades(grades)
+    compulsories_left = get_compulsories_left(programme_courses, completed_courses)
+    print(compulsories_left)
+
 def main():
     """ Main method """
     programme = prompt_user_programme()
@@ -31,7 +71,7 @@ def main():
         print("Could not find grades data...")
         print("Hint: Try running 'python src/scrape_grades.py'")
         return
-    # TODO: Analyze data objects
+    analyze_grades(programme_courses, my_grades)
     print("Done")
 
 if __name__ == '__main__':
