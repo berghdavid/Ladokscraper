@@ -67,12 +67,19 @@ def find_course_status(driver):
             continue
     return 'credited'
 
+def get_course_code(course_name):
+    """ Find the course code in the given course name. """
+    splitted = course_name.split(' ')
+    for word in splitted:
+        if word == word.upper() and len(word) > 3 and word not in ('-', 'EXCHANGED'):
+            return word
+    return course_name
+
 def retrieve_grades(driver, all_programmes):
     """ Retrieve grades from all the given course links. """
     all_results = {}
     header_class = "ladok-list-kort-header-rubrik"
-    size = len(all_programmes)
-    print(f"Collecting grades from {size} programmes...")
+    print(f"Collecting grades from {len(all_programmes)} programmes...")
     for programme_name, course_links in all_programmes.items():
         programme_results = {}
         with alive_bar(len(course_links), title=programme_name) as loading_bar:
@@ -96,7 +103,7 @@ def retrieve_grades(driver, all_programmes):
                     else:
                         grade = 'U'
 
-                    code = course_name.split('-')[-1].strip()
+                    code = get_course_code(course_name)
                     programme_results[code] = {
                         'name': course_name,
                         'status': status,
