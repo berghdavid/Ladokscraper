@@ -6,6 +6,7 @@ Enter project directory and run the either of the commands below
 ```
 python src/scrape_grades.py
 python src/scrape_programmes.py
+python src/analyze_data.py
 ```
 
 ## About
