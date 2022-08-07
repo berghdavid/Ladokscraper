@@ -80,7 +80,6 @@ def get_programme_courses(driver, programme):
             all_courses[all_table_names[index].text] = yearly_courses
             # pylint: disable=not-callable
             loading_bar()
-    print(all_courses)
     return all_courses
 
 def main():
