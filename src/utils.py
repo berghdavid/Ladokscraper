@@ -55,7 +55,7 @@ def wait_find_elements(driver, identifier, name, timeout = TIMEOUT_MAX):
 def get_data_dir_path(filename):
     """ Computes the data directory path based on current file structure. """
     script_dir = os.path.dirname(__file__)
-    rel_path = "../data/" + filename
+    rel_path = "..\\data\\" + filename
     return os.path.join(script_dir, rel_path)
 
 def write_object_into_json_file(obj, file_name):
