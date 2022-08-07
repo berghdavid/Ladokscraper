@@ -62,11 +62,10 @@ def get_programme_courses(driver, programme):
     driver.get('https://kurser.lth.se/lot/programme?ay=22_23&programme=' + programme)
     all_courses = {}
     all_table_names = wait_find_elements(driver, By.TAG_NAME, "h2")
-    study_years_size = len(all_table_names)
 
-    print(f"Collecting courses from {study_years_size} study years...")
+    print(f"Collecting courses from {len(all_table_names)} study years...")
     all_tables = wait_find_elements(driver, By.TAG_NAME, "tbody")
-    with alive_bar(study_years_size, title='Study years') as loading_bar:
+    with alive_bar(len(all_table_names), title='Study years') as loading_bar:
         for index, table in enumerate(all_tables):
             yearly_courses = []
             course_codes = get_course_codes(table)
