@@ -67,6 +67,12 @@ def find_course_status(driver):
             continue
     return 'credited'
 
+def find_course_hp(driver):
+    """ Find the hp of the course. """
+    hp_texts = wait_find_elements(driver, By.CLASS_NAME, 'text-muted')
+    for hp_text in hp_texts:
+        print(hp_text.text)
+
 def get_course_code(course_name):
     """ Find the course code in the given course name. """
     splitted = course_name.split(' ')

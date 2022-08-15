@@ -33,6 +33,8 @@ def prompt_action():
             return
         else:
             print("Could not understand that command. Type any number between 1 and 5")
+            continue
+        return
 
 def main():
     """ Main method """

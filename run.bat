@@ -1,5 +1,7 @@
 @ECHO OFF
 
+ECHO "Starting..."
+
 WHERE /Q python
 IF %ERRORLEVEL% NEQ 0 (
   ECHO "Could not find python."
