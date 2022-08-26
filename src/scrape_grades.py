@@ -14,8 +14,8 @@ from utils import init_webdriver, wait_find_element, wait_find_elements, write_o
 
 def prompt_login_info():
     """ Request username and password which is used for login to Ladok. """
-    username = input("Username: ")
-    password = getpass("Password: ")
+    username = input("Ladok username: ")
+    password = getpass("Ladok password: ")
     return {
         'username': username,
         'password': password
